@@ -45,6 +45,10 @@ pub struct Config {
 
     /// Interval after which to flush metrics
     pub metrics_flush_interval: Duration,
+
+    pub pod_name: Option<String>,
+    pub pod_namespace: Option<String>,
+    pub node_name: Option<String>,
 }
 
 /// Configuration settings for binding a listener.
@@ -121,10 +125,9 @@ pub const ENV_CONTROL_LISTENER: &str = "CONDUIT_PROXY_CONTROL_LISTENER";
 const ENV_PRIVATE_CONNECT_TIMEOUT: &str = "CONDUIT_PROXY_PRIVATE_CONNECT_TIMEOUT";
 const ENV_PUBLIC_CONNECT_TIMEOUT: &str = "CONDUIT_PROXY_PUBLIC_CONNECT_TIMEOUT";
 
-// the following are `pub` because they're used in the `ctx` module for populating `Process`.
-pub const ENV_NODE_NAME: &str = "CONDUIT_PROXY_NODE_NAME";
-pub const ENV_POD_NAME: &str = "CONDUIT_PROXY_POD_NAME";
-pub const ENV_POD_NAMESPACE: &str = "CONDUIT_PROXY_POD_NAMESPACE";
+const ENV_NODE_NAME: &str = "CONDUIT_PROXY_NODE_NAME";
+const ENV_POD_NAME: &str = "CONDUIT_PROXY_POD_NAME";
+const ENV_POD_NAMESPACE: &str = "CONDUIT_PROXY_POD_NAMESPACE";
 
 pub const ENV_CONTROL_URL: &str = "CONDUIT_PROXY_CONTROL_URL";
 const ENV_RESOLV_CONF: &str = "CONDUIT_RESOLV_CONF";
@@ -158,6 +161,9 @@ impl<'a> TryFrom<&'a Strings> for Config {
         let event_buffer_capacity = parse(strings, ENV_EVENT_BUFFER_CAPACITY, parse_number);
         let metrics_flush_interval_secs =
             parse(strings, ENV_METRICS_FLUSH_INTERVAL_SECS, parse_number);
+        let pod_name = strings.get(ENV_POD_NAME);
+        let pod_namespace = strings.get(ENV_POD_NAMESPACE);
+        let node_name = strings.get(ENV_NODE_NAME);
 
         Ok(Config {
             private_listener: Listener {
@@ -185,7 +191,11 @@ impl<'a> TryFrom<&'a Strings> for Config {
                 event_buffer_capacity?.unwrap_or(DEFAULT_EVENT_BUFFER_CAPACITY),
             metrics_flush_interval:
                 Duration::from_secs(
-                    metrics_flush_interval_secs?.unwrap_or(DEFAULT_METRICS_FLUSH_INTERVAL_SECS))
+                    metrics_flush_interval_secs?.unwrap_or(DEFAULT_METRICS_FLUSH_INTERVAL_SECS)),
+
+            pod_name: pod_name?,
+            pod_namespace: pod_namespace?,
+            node_name: node_name?
         })
     }
 }
